@@ -460,6 +460,13 @@ def _build_language_section(report_language: str, *, chat_mode: bool = False) ->
 - Reply in English.
 - If you output JSON, keep the keys unchanged and write every human-readable value in English.
 """
+        if normalized == "th":
+            return """
+## Output Language
+
+- Reply in Thai (ภาษาไทย).
+- If you output JSON, keep the keys unchanged and write every human-readable value in Thai.
+"""
         return """
 ## 输出语言
 
@@ -474,6 +481,15 @@ def _build_language_section(report_language: str, *, chat_mode: bool = False) ->
 - Keep every JSON key unchanged.
 - `decision_type` must remain `buy|hold|sell`.
 - All human-readable JSON values must be written in English.
+- This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, all dashboard text, checklist items, and summaries.
+"""
+    if normalized == "th":
+        return """
+## Output Language
+
+- Keep every JSON key unchanged.
+- `decision_type` must remain `buy|hold|sell`.
+- All human-readable JSON values must be written in Thai (ภาษาไทย).
 - This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, all dashboard text, checklist items, and summaries.
 """
 

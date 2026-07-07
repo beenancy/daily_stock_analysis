@@ -108,7 +108,7 @@ logger = logging.getLogger(__name__)
 def _localized_text(language: Any, *, en: str, zh: str, ko: str) -> str:
     """Pick a deterministic fallback string for the report language (zh/en/ko)."""
     normalized = normalize_report_language(language)
-    if normalized == "en":
+    if normalized in ("en", "th"):
         return en
     if normalized == "ko":
         return ko
@@ -246,8 +246,8 @@ def _legacy_audit_marker_specs(
     add("stock_code", code)
     add("stock_name", stock_name)
     add("analysis_date", context.get("date"))
-    add("market_phase", "## Market Phase Context" if report_language in ("en", "ko") else "## 市场阶段上下文")
-    add("daily_market_context", "## Daily Market Context" if report_language in ("en", "ko") else "## 大盘环境摘要")
+    add("market_phase", "## Market Phase Context" if report_language in ("en", "ko", "th") else "## 市场阶段上下文")
+    add("daily_market_context", "## Daily Market Context" if report_language in ("en", "ko", "th") else "## 大盘环境摘要")
     add("analysis_context_pack", analysis_context_pack_summary)
     add("quote", "## 📈 技术面数据")
     add("news_context", "## 📰 舆情情报" if news_context else None)
@@ -1574,7 +1574,7 @@ def _set_structural_hold_wording(
     if advice_key == "range":
         if language == "zh" and "震荡" not in str(result.trend_prediction):
             result.trend_prediction = "震荡"
-        elif language == "en":
+        elif language in ("en", "th"):
             result.trend_prediction = "Sideways"
         elif language == "ko":
             result.trend_prediction = "횡보"
@@ -2373,6 +2373,16 @@ class GeminiAnalyzer:
 - `decision_type` must remain `buy|hold|sell`.
 - All human-readable JSON values must be written in English.
 - Use the common English company name when you are confident; otherwise keep the original listed company name instead of inventing one.
+- This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, nested dashboard text, checklist items, and all narrative summaries.
+"""
+        if lang == "th":
+            return base_prompt + """
+
+## Output Language (highest priority)
+
+- Keep all JSON keys unchanged.
+- `decision_type` must remain `buy|hold|sell`.
+- All human-readable JSON values must be written in Thai (ภาษาไทย).
 - This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, nested dashboard text, checklist items, and all narrative summaries.
 """
         if lang == "ko":
@@ -3404,7 +3414,7 @@ class GeminiAnalyzer:
             field = str(details.get("field") or "GENERATION_BACKEND")
             requested_backend = str(details.get("requested_backend") or backend_error.backend)
             reason = str(details.get("reason") or backend_error.error_code.value)
-            if report_language == "en":
+            if report_language in ("en", "th"):
                 summary = (
                     "AI analysis is unavailable because the generation backend "
                     f"cannot start: {backend_error.error_code.value}."
@@ -3933,7 +3943,7 @@ class GeminiAnalyzer:
             chip_instruction = (
                 "Do not fabricate profit ratio, average cost, or concentration. Mention chip data "
                 "unavailability only once in the report; do not repeat per-field no-data text in `chip_structure`."
-                if report_language in ("en", "ko")
+                if report_language in ("en", "ko", "th")
                 else "请勿编造获利比例、平均成本或集中度；报告中只说明一次筹码数据不可用，不要把“数据缺失，无法判断”逐字段重复写入 `chip_structure`。"
             )
             prompt += f"""
@@ -4141,6 +4151,17 @@ class GeminiAnalyzer:
 - Use the common English company name when you are confident. If not, keep the listed company name rather than inventing one.
 - When data is missing, explain it in English instead of Chinese.
 """
+        elif report_language == "th":
+            prompt += """
+
+### Output language requirements (highest priority)
+- Keep every JSON key exactly as defined above; do not translate keys.
+- `decision_type` must remain `buy`, `hold`, or `sell`.
+- All human-readable JSON values must be in Thai (ภาษาไทย).
+- This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, all nested dashboard text, checklist items, and every summary field.
+- Use the common Thai or original listed company name when you are confident. If not, keep the listed company name rather than inventing one.
+- When data is missing, explain it in Thai instead of Chinese or English.
+"""
         elif report_language == "ko":
             prompt += """
 
@@ -4264,7 +4285,7 @@ class GeminiAnalyzer:
     def _build_integrity_complement_prompt(self, missing_fields: List[str], report_language: str = "zh") -> str:
         """Build complement instruction for missing mandatory fields."""
         report_language = normalize_report_language(report_language)
-        if report_language in ("en", "ko"):
+        if report_language in ("en", "ko", "th"):
             lines = ["### Completion requirements: fill the missing mandatory fields below and output the full JSON again:"]
             for f in missing_fields:
                 if f == "sentiment_score":
@@ -4335,7 +4356,7 @@ class GeminiAnalyzer:
         """Build retry prompt using the previous response as the complement baseline."""
         complement = self._build_integrity_complement_prompt(missing_fields, report_language=report_language)
         previous_output = previous_response.strip()
-        if normalize_report_language(report_language) in ("en", "ko"):
+        if normalize_report_language(report_language) in ("en", "ko", "th"):
             prefix = "### The previous output is below. Complete the missing fields based on that output and return the full JSON again. Do not omit existing fields:"
         else:
             prefix = "### 上一次输出如下，请在该输出基础上补齐缺失字段，并重新输出完整 JSON。不要省略已有字段："

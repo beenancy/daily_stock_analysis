@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 from src.schemas.decision_scale import signal_key_for_score
 
-SUPPORTED_REPORT_LANGUAGES = ("zh", "en", "ko")
+SUPPORTED_REPORT_LANGUAGES = ("zh", "en", "ko", "th")
 
 _REPORT_LANGUAGE_ALIASES = {
     "zh-cn": "zh",
@@ -28,6 +28,10 @@ _REPORT_LANGUAGE_ALIASES = {
     "kr": "ko",
     "ko-kr": "ko",
     "ko_kr": "ko",
+    "th": "th",
+    "thai": "th",
+    "th-th": "th",
+    "th_th": "th",
 }
 
 _OPERATION_ADVICE_CANONICAL_MAP = {
@@ -994,7 +998,7 @@ def get_localized_stock_name(value: Any, code: Any, language: Optional[str]) -> 
 def get_sentiment_label(score: int, language: Optional[str]) -> str:
     """Return localized sentiment label by score band."""
     normalized = normalize_report_language(language)
-    if normalized == "en":
+    if normalized in ("en", "th"):
         if score >= 80:
             return "Very Bullish"
         if score >= 60:
@@ -1025,3 +1029,28 @@ def get_sentiment_label(score: int, language: Optional[str]) -> str:
     if score >= 20:
         return "悲观"
     return "极度悲观"
+
+
+# Automatically populate Thai translations by duplicating English
+for name in [
+    "_BIAS_STATUS_TRANSLATIONS",
+    "_CHIP_HEALTH_TRANSLATIONS",
+    "_CHIP_UNAVAILABLE_BY_LANGUAGE",
+    "_CONFIDENCE_LEVEL_TRANSLATIONS",
+    "_GENERIC_STOCK_NAME_BY_LANGUAGE",
+    "_NO_DATA_BY_LANGUAGE",
+    "_OPERATION_ADVICE_TRANSLATIONS",
+    "_PLACEHOLDER_BY_LANGUAGE",
+    "_REPORT_LABELS",
+    "_TREND_PREDICTION_TRANSLATIONS",
+    "_UNKNOWN_BY_LANGUAGE"
+]:
+    d = globals().get(name)
+    if isinstance(d, dict):
+        if "en" in d:
+            d["th"] = d["en"]
+        else:
+            for k, v in d.items():
+                if isinstance(v, dict) and "en" in v:
+                    v["th"] = v["en"]
+
