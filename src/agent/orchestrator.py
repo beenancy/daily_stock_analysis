@@ -740,7 +740,7 @@ class AgentOrchestrator:
             ctx.stock_code = _extract_stock_code(task)
 
         if "report_language" not in ctx.meta:
-            ctx.meta["report_language"] = "zh"
+            ctx.meta["report_language"] = "th"
 
         return ctx
 
