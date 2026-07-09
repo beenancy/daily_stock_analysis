@@ -174,6 +174,56 @@ class ChannelDetector:
         return names.get(channel, "未知渠道")
 
 
+def translate_to_thai_if_needed(content: str) -> str:
+    """If the content has Chinese characters and report_language is th, translate it to Thai using LLM."""
+    import re
+    import os
+    config = get_config()
+    report_language = normalize_report_language(getattr(config, "report_language", "th"))
+    if report_language != "th":
+        return content
+
+    # Check if content has Chinese characters (Common Han range: \u4e00-\u9fff)
+    if not re.search(r"[\u4e00-\u9fff]", content):
+        return content
+
+    logger.info("[Translator] Detect Chinese content in Thai report, translating to Thai via LLM...")
+    try:
+        import litellm
+        model = config.litellm_model or "gemini/gemini-1.5-flash"
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+        
+        system_instruction = (
+            "You are a professional financial translator. "
+            "Translate the given financial stock analysis report from Chinese to beautiful Thai (ภาษาไทย). "
+            "Keep the original Markdown table structure, headers, numbers, and stock symbols exactly as they are. "
+            "Do not add any preamble, conversational text, or explanation; output ONLY the translated Thai Markdown report."
+        )
+        
+        messages = [
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": content}
+        ]
+        
+        kwargs = {}
+        if api_key:
+            kwargs["api_key"] = api_key
+            
+        response = litellm.completion(
+            model=model,
+            messages=messages,
+            temperature=0.3,
+            **kwargs
+        )
+        translated_text = response.choices[0].message.content
+        if translated_text and translated_text.strip():
+            logger.info("[Translator] Report successfully translated to Thai.")
+            return translated_text.strip()
+    except Exception as exc:
+        logger.error(f"[Translator] Translation failed: {exc}. Sending untranslated content.")
+    return content
+
+
 class NotificationService(
     AstrbotSender,
     CustomWebhookSender,
@@ -1126,7 +1176,7 @@ class NotificationService(
         labels = get_report_labels(report_language)
 
         def _nlabel(en: str, zh: str, ko: str) -> str:
-            if report_language == "en":
+            if report_language in ("en", "th"):
                 return en
             if report_language == "ko":
                 return ko
@@ -2483,6 +2533,7 @@ class NotificationService(
         Returns:
             Structured dispatch diagnostics.
         """
+        content = translate_to_thai_if_needed(content)
         context_success = self.send_to_context(content)
         if not self.should_broadcast_static_channels():
             if context_success:
@@ -2706,6 +2757,7 @@ class NotificationService(
         Returns:
             保存的文件路径
         """
+        content = translate_to_thai_if_needed(content)
         from pathlib import Path
 
         if filename is None:
