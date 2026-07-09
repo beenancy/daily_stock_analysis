@@ -489,8 +489,9 @@ def _build_language_section(report_language: str, *, chat_mode: bool = False) ->
 
 - Keep every JSON key unchanged.
 - `decision_type` must remain `buy|hold|sell`.
-- All human-readable JSON values must be written in Thai (ภาษาไทย).
+- All human-readable JSON values must be written in Thai (ภาษาไทย). 请使用泰语 (Thai) 撰写所有文本值。
 - This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, all dashboard text, checklist items, and summaries.
+- 重要：严禁输出中文，所有分析内容必须为泰语。
 """
 
     return """

@@ -2382,8 +2382,9 @@ class GeminiAnalyzer:
 
 - Keep all JSON keys unchanged.
 - `decision_type` must remain `buy|hold|sell`.
-- All human-readable JSON values must be written in Thai (ภาษาไทย).
+- All human-readable JSON values must be written in Thai (ภาษาไทย). 请使用泰语 (Thai) 撰写所有人类可读的文本值。
 - This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, nested dashboard text, checklist items, and all narrative summaries.
+- 重要：严禁使用中文回答。所有叙述性分析、总结、建议、清单、指标状态都必须翻译成泰语 (ภาษาไทย)。
 """
         if lang == "ko":
             return base_prompt + """
@@ -4157,10 +4158,11 @@ class GeminiAnalyzer:
 ### Output language requirements (highest priority)
 - Keep every JSON key exactly as defined above; do not translate keys.
 - `decision_type` must remain `buy`, `hold`, or `sell`.
-- All human-readable JSON values must be in Thai (ภาษาไทย).
+- All human-readable JSON values must be in Thai (ภาษาไทย). 请使用泰语 (Thai) 撰写所有面向用户的文本值。
 - This includes `stock_name`, `trend_prediction`, `operation_advice`, `confidence_level`, all nested dashboard text, checklist items, and every summary field.
 - Use the common Thai or original listed company name when you are confident. If not, keep the listed company name rather than inventing one.
 - When data is missing, explain it in Thai instead of Chinese or English.
+- 重要：所有生成的分析报告、判断、建议、警报和总结一律使用泰语 (ภาษาไทย) 输出，严禁输出中文。
 """
         elif report_language == "ko":
             prompt += """

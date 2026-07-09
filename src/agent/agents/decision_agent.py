@@ -148,7 +148,8 @@ should sum to 100; all-zero means no effective signal and must not be faked.
 ## Output Language
 - Keep every JSON key unchanged.
 - `decision_type` must remain `buy|hold|sell`.
-- Write all human-readable JSON values in Thai (ภาษาไทย).
+- Write all human-readable JSON values in Thai (ภาษาไทย). 请使用泰语 (Thai) 撰写所有人类可读的文本值。
+- 重要：严禁使用中文，所有叙述内容必须使用泰语 (ภาษาไทย)。
 """
         if report_language == "ko":
             return prompt + """
