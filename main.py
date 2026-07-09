@@ -1255,6 +1255,7 @@ def main() -> int:
     # 加载配置（在 bootstrap logging 之后执行，确保异常有日志）
     try:
         config = get_config()
+        logger.info(f"Loaded config: REPORT_LANGUAGE='{config.report_language}' (env: '{os.environ.get('REPORT_LANGUAGE')}')")
     except Exception as exc:
         logger.exception("加载配置失败: %s", exc)
         return 1
