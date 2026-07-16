@@ -14,7 +14,13 @@ import re
 import time
 import subprocess
 import requests
-from dotenv import load_dotenv
+import sys
+
+# Reconfigure stdout/stderr to use UTF-8 to prevent cp874 encoding errors on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # Load configurations
 load_dotenv()
